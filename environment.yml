@@ -1,0 +1,13 @@
+name: MemoryDependentComputation
+
+channels:
+    - pytorch
+    - defaults
+    - conda-forge
+
+dependencies:
+    - pytorch::pytorch=1.7.0
+    - pytorch::torchvision=0.8.1
+    - defaults::cudatoolkit=10.2.89
+    - defaults::tensorboard=2.3.0
+    - defaults::matplotlib=3.3.2
