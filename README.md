@@ -46,6 +46,33 @@ python plot_memorizing_associations_task.py --checkpoint_path='PATH_TO_CHECKPOIN
 ```
 The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
 
+### One-shot Learning
+Here we applied our model to the problem of 1-shot 5-way classification on the
+[Omniglot](https://github.com/brendenlake/omniglot) data set. We used a CNN as input encoder for the Omniglot images,
+which was pre-trained using the prototypical loss and then converted into a spiking CNN by using a threshold-balancing 
+algorithm. The checkpoint of this CNN is available
+[here](results/checkpoints/omniglot-one-shot-task-protonet-checkpoint.pth.tar) in this repository.
+
+#### Training
+To start training on the Omniglot 1-shot task, run
+```bash
+python omniglot_one_shot_task.py [optional arguments]
+```
+
+#### Testing
+To evaluate a trained model on the test data set, run:
+```bash
+python omniglot_one_shot_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
+```
+The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+
+#### Plotting
+To plot the network activity and the model's output after training, run:
+```bash
+python plot_omniglot_one_shot_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
+```
+The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+
 ## Multiprocessing Distributed Data Parallel Training
 Model training can be distributed across multiple GPUs and multiple nodes (see below for examples). You should always
 use the NCCL backend for multiprocessing distributed training since it currently provides the best distributed training

@@ -11,3 +11,4 @@ dependencies:
     - defaults::cudatoolkit=10.2.89
     - defaults::tensorboard=2.3.0
     - defaults::matplotlib=3.3.2
+    - conda-forge::scikit-learn=1.0.2

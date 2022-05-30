@@ -10,11 +10,11 @@ from models.neuron_models import NeuronModel
 class EncodingLayer(torch.nn.Module):
 
     def __init__(self, input_size: int, hidden_size: int, mask_time_words: bool, learn_encoding: bool,
-                 num_timesteps: int, dynamics: NeuronModel) -> None:
+                 num_time_steps: int, dynamics: NeuronModel) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.num_timesteps = num_timesteps
+        self.num_time_steps = num_time_steps
         self.dynamics = dynamics
 
         self.encoding = torch.nn.Parameter(torch.Tensor(input_size, hidden_size), requires_grad=learn_encoding)
@@ -40,7 +40,7 @@ class EncodingLayer(torch.nn.Module):
 
         output_sequence = []
         for n in range(sequence_length):
-            for t in range(self.num_timesteps):
+            for t in range(self.num_time_steps):
                 output, states = self.dynamics(i.select(1, n), states)
 
                 output_sequence.append(output)

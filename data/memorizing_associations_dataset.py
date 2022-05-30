@@ -29,7 +29,7 @@ class MemorizingAssociationsDataset(torch.utils.data.Dataset):
         return self.dataset_size
 
     def __getitem__(self, idx: int) -> Tuple[TypedDict('MemorizingAssociationsDatasetItem',
-                                                       {'features': Any,'labels': Any, 'query': Any, 'answer': Any}),
+                                                       {'features': Any, 'labels': Any, 'query': Any, 'answer': Any}),
                                              int]:
         if not self.inf_data:
             features = self.data[0][idx]
