@@ -1,4 +1,7 @@
 # Memory-enriched computation and learning in spiking neural networks through Hebbian plasticity
+This is the official code for the paper "Memory-enriched computation and learning in spiking neural networks through
+Hebbian plasticity" ([[Abstract] arxiv.org](https://arxiv.org/abs/2205.11276),
+[[PDF] arxiv.org](https://arxiv.org/pdf/2205.11276.pdf)).
 
 ## Setup
 You need [PyTorch](https://pytorch.org) to run this code. We tested it on PyTorch version 1.7.0.
