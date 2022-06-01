@@ -73,6 +73,35 @@ python plot_omniglot_one_shot_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE
 ```
 The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
 
+### Cross-modal associations
+In this task we asked whether Hebbian plasticity can enable SNNs to perform cross-modal associations. We trained our
+model in an autoencoder-like fashion. We used the [FSDD](https://github.com/Jakobovski/free-spoken-digit-dataset) and
+the [MNIST](http://yann.lecun.com/exdb/mnist/) data set in this task. We used two CNNs as input
+encoder which were pre-trained on FSDD/MNIST classification respectively and then converted into spiking CNNs by using
+the threshold-balancing algorithm. The checkpoints of these CNNs are available
+[here](results/checkpoints/cross-modal-associations-task-audio-protonet-checkpoint.tar) and
+[here](results/checkpoints/cross-modal-associations-task-image-protonet-checkpoint.tar) in this repository.
+
+#### Training
+To start training on the cross-modal associations task, run
+```bash
+python cross_modal_associations_task.py [optional arguments]
+```
+
+#### Testing
+To evaluate a trained model on the test data set, run:
+```bash
+python cross_modal_associations_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
+```
+The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+
+#### Plotting
+To plot the network activity and the model's output after training, run:
+```bash
+python plot_cross_modal_associations_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
+```
+The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+
 ## Multiprocessing Distributed Data Parallel Training
 Model training can be distributed across multiple GPUs and multiple nodes (see below for examples). You should always
 use the NCCL backend for multiprocessing distributed training since it currently provides the best distributed training

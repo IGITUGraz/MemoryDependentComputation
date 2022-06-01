@@ -7,6 +7,7 @@ channels:
 
 dependencies:
     - pytorch::pytorch=1.7.0
+    - pytorch::torchaudio=0.7.0
     - pytorch::torchvision=0.8.1
     - defaults::cudatoolkit=10.2.89
     - defaults::tensorboard=2.3.0
