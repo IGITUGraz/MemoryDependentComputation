@@ -102,6 +102,25 @@ python plot_cross_modal_associations_task.py --checkpoint_path='PATH_TO_CHECKPOI
 ```
 The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
 
+### Question Answering
+In this task we applied our model to the [bAbI](https://research.facebook.com/downloads/babi/) data set. We used 10k
+training examples and trained models on each of the 20 tasks individually.
+
+#### Training
+To start training on bAbI task 1 in the 10k training examples setting, run
+```bash
+python question_answering_task.py [optional arguments]
+```
+Set the command line argument `--task` to train on other tasks. To set the synaptic delay in the feedback loop, use the
+command line argument `--readout_delay` (in the paper we have used 1ms and 30ms).
+
+#### Testing
+To evaluate a trained model on the test data set, run:
+```bash
+python question_answering_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
+```
+The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+
 ## Multiprocessing Distributed Data Parallel Training
 Model training can be distributed across multiple GPUs and multiple nodes (see below for examples). You should always
 use the NCCL backend for multiprocessing distributed training since it currently provides the best distributed training
