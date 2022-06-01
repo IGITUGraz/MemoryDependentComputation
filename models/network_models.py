@@ -161,3 +161,40 @@ class CrossModalAssociations(torch.nn.Module):
         decoder_outputs = [decoder_output_l1, decoder_output_l2]
 
         return outputs, encoding_outputs, writing_outputs, reading_outputs, decoder_outputs
+
+
+class QuestionAnswering(torch.nn.Module):
+
+    def __init__(self, input_size: int, output_size: int, num_embeddings: int, embedding_size: int, memory_size: int,
+                 mask_time_words: bool, learn_encoding: bool, num_time_steps: int, readout_delay: int, tau_trace: float,
+                 plasticity_rule: Callable, dynamics: NeuronModel) -> None:
+        super().__init__()
+        self.readout_delay = readout_delay
+
+        self.embedding_layer = EmbeddingLayer(num_embeddings, embedding_size, padding_idx=0)
+        self.encoding_layer = EncodingLayer(input_size, embedding_size, mask_time_words, learn_encoding,
+                                            num_time_steps, dynamics)
+        self.writing_layer = WritingLayer(embedding_size, memory_size, plasticity_rule, tau_trace, dynamics)
+        self.reading_layer = ReadingLayer(embedding_size, memory_size, readout_delay, dynamics)
+        self.output_layer = torch.nn.Linear(memory_size, output_size, bias=False)
+
+    def forward(self, story: torch.Tensor, query: torch.Tensor) -> Tuple:
+
+        story_embedded = self.embedding_layer(story)
+        query_embedded = self.embedding_layer(query)
+
+        story_encoded = self.encoding_layer(story_embedded)
+        query_encoded = self.encoding_layer(query_embedded.unsqueeze(1))
+
+        mem, write_key, write_val = self.writing_layer(story_encoded)
+
+        read_key, read_val = self.reading_layer(query_encoded, mem)
+
+        outputs = torch.sum(read_val[:, -30:, :], dim=1)
+        outputs = self.output_layer(outputs)
+
+        encoding_outputs = [story_encoded, query_encoded]
+        writing_outputs = [mem, write_key, write_val]
+        reading_outputs = [read_key, read_val]
+
+        return outputs, encoding_outputs, writing_outputs, reading_outputs
