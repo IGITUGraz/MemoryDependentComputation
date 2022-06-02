@@ -1,3 +1,5 @@
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/memory-enriched-computation-and-learning-in/question-answering-on-babi)](https://paperswithcode.com/sota/question-answering-on-babi?p=memory-enriched-computation-and-learning-in)
+
 # Memory-enriched computation and learning in spiking neural networks through Hebbian plasticity
 This is the official code for the paper "Memory-enriched computation and learning in spiking neural networks through
 Hebbian plasticity" ([[Abstract] arxiv.org](https://arxiv.org/abs/2205.11276),
