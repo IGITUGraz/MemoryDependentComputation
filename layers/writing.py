@@ -1,7 +1,7 @@
 """Writing layer"""
 
 import math
-from typing import Optional, Tuple, Callable
+from typing import Optional, Tuple, Callable, List
 
 import torch
 import torch.nn.functional
@@ -25,8 +25,9 @@ class WritingLayer(torch.nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x: torch.Tensor, states: Optional[Tuple[Tuple[torch.Tensor, ...], Tuple[torch.Tensor, ...],
-                torch.Tensor, torch.Tensor, torch.Tensor]] = None) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor, mem: Optional[torch.Tensor] = None, states: Optional[Tuple[
+            List[torch.Tensor], List[torch.Tensor], torch.Tensor, torch.Tensor]] = None) -> Tuple[
+            torch.Tensor, torch.Tensor, torch.Tensor, List[torch.Tensor]]:
         batch_size, sequence_length, _ = x.size()
 
         if states is None:
@@ -34,9 +35,11 @@ class WritingLayer(torch.nn.Module):
             val_states = self.dynamics.initial_states(batch_size, self.hidden_size, x.dtype, x.device)
             key_trace = torch.zeros(batch_size, self.hidden_size, dtype=x.dtype, device=x.device)
             val_trace = torch.zeros(batch_size, self.hidden_size, dtype=x.dtype, device=x.device)
-            mem = torch.zeros(batch_size, self.hidden_size, self.hidden_size, dtype=x.dtype, device=x.device)
         else:
-            key_states, val_states, key_trace, val_trace, mem = states
+            key_states, val_states, key_trace, val_trace = states
+
+        if mem is None:
+            mem = torch.zeros(batch_size, self.hidden_size, self.hidden_size, dtype=x.dtype, device=x.device)
 
         i = torch.nn.functional.linear(x, self.W)
         ik, iv = i.chunk(2, dim=2)
@@ -65,7 +68,9 @@ class WritingLayer(torch.nn.Module):
             key_output_sequence.append(key)
             val_output_sequence.append(val)
 
-        return mem, torch.stack(key_output_sequence, dim=1), torch.stack(val_output_sequence, dim=1)
+        states = [key_states, val_states, key_trace, val_trace]
+
+        return mem, torch.stack(key_output_sequence, dim=1), torch.stack(val_output_sequence, dim=1), states
 
     def reset_parameters(self) -> None:
         torch.nn.init.xavier_uniform_(self.W, gain=math.sqrt(2))

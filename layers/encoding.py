@@ -1,6 +1,6 @@
 """Encoding layer"""
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import torch
 
@@ -30,7 +30,8 @@ class EncodingLayer(torch.nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x: torch.Tensor, states: Optional[Tuple[torch.Tensor, ...]] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, states: Optional[List[torch.Tensor]] = None) -> Tuple[torch.Tensor,
+                                                                                             List[torch.Tensor]]:
         batch_size, sequence_length, _, _ = x.size()
 
         if states is None:
@@ -45,7 +46,7 @@ class EncodingLayer(torch.nn.Module):
 
                 output_sequence.append(output)
 
-        return torch.stack(output_sequence, dim=1)
+        return torch.stack(output_sequence, dim=1), states
 
     def reset_parameters(self) -> None:
         self.encoding.data.fill_(1.0)

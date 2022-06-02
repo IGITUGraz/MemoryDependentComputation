@@ -37,14 +37,14 @@ To evaluate a trained model on the test data set, run:
 ```bash
 python memorizing_associations_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 #### Plotting
 To plot the network activity and the model's output after training, run:
 ```bash
 python plot_memorizing_associations_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 ### One-shot Learning
 Here we applied our model to the problem of 1-shot 5-way classification on the
@@ -64,14 +64,14 @@ To evaluate a trained model on the test data set, run:
 ```bash
 python omniglot_one_shot_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 #### Plotting
 To plot the network activity and the model's output after training, run:
 ```bash
 python plot_omniglot_one_shot_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 ### Cross-modal associations
 In this task we asked whether Hebbian plasticity can enable SNNs to perform cross-modal associations. We trained our
@@ -93,14 +93,14 @@ To evaluate a trained model on the test data set, run:
 ```bash
 python cross_modal_associations_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 #### Plotting
 To plot the network activity and the model's output after training, run:
 ```bash
 python plot_cross_modal_associations_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 ### Question Answering
 In this task we applied our model to the [bAbI](https://research.facebook.com/downloads/babi/) data set. We used 10k
@@ -119,7 +119,35 @@ To evaluate a trained model on the test data set, run:
 ```bash
 python question_answering_task.py --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
 ```
-The optional model specific arguments must be set to the same values as during training, otherwise an error is thrown.
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
+
+#### Plotting
+To plot the network activity and the model's output after training, run:
+```bash
+python plot_question_answering_task.py --checkpoint_path='PATH_TO_CHECKPOINT_FILE' [optional arguments]
+```
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
+
+### Reinforcement Learning
+Here we evaluated our model on an episodic reinforcement learning task. The task is based on the popular children’s game
+[Concentration](https://en.wikipedia.org/wiki/Concentration_(card_game)). We consider a one-player solitaire version of
+the game. In this version of the game the objective is to find all matching pairs with as few card flips as possible.
+
+#### Training
+To start training on the Concentration game with a deck of four cards, run
+```bash
+python reinforcement_learning_task.py --decay_lr_linearly [optional arguments]
+```
+Use the command line argument `--num_cells` to set the number of cards (in the paper we have used 4 and 6). You will
+also need to adjust `--num_steps` (we have used `--num_steps=10` for the 4-cards game and `--num_steps=100` for the
+6-cards game). To use a new deck of cards for each game use `--resample_cards`.
+
+#### Testing
+To evaluate a trained model, run:
+```bash
+python reinforcement_learning_task.py --decay_lr_linearly --resume='PATH_TO_CHECKPOINT_FILE' --evaluate [optional arguments]
+```
+The optional arguments must be set to the same values as during training, otherwise an error is thrown.
 
 ## Multiprocessing Distributed Data Parallel Training
 Model training can be distributed across multiple GPUs and multiple nodes (see below for examples). You should always

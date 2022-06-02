@@ -13,3 +13,6 @@ dependencies:
     - defaults::tensorboard=2.3.0
     - defaults::matplotlib=3.3.2
     - conda-forge::scikit-learn=1.0.2
+    - conda-forge::gym=0.18.0
+    - conda-forge::tqdm=4.59.0
+    - conda-forge::stable-baselines3=1.1.0

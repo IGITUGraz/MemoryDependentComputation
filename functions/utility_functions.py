@@ -1,5 +1,7 @@
 """Some utility functions"""
+from typing import List
 
+import numpy as np
 import torch
 
 
@@ -32,3 +34,23 @@ class TrimSilence(object):
                 break
 
         return x[start:end]
+
+
+def variance_explained(y_pred: np.ndarray, y_true: np.ndarray) -> float:
+    """ Computes fraction of variance that y_pred explains about y.
+
+    Interpretation:
+        ev=0  =>  might as well have predicted zero
+        ev=1  =>  perfect prediction
+        ev<0  =>  worse than just predicting zero
+
+    """
+    var_y = np.var(y_true)
+    return np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+
+
+def to_one_hot(x: int, num_values: int) -> List[int]:
+    y = [0] * num_values
+    y[x] = 1
+
+    return y
