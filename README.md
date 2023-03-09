@@ -158,18 +158,18 @@ performance.
 
 ### Single node, multiple GPUs:
 ```bash
-python SOME_SCRIPT.py --dist-url 'tcp://127.0.0.1:FREE_PORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 [optional arguments]
+python SOME_SCRIPT.py --dist_url 'tcp://127.0.0.1:FREE_PORT' --dist_backend 'nccl' --multiprocessing_distributed --world_size 1 --rank 0 [optional arguments]
 ```
 
 ### Multiple nodes:
 Node 0:
 ```bash
-python SOME_SCRIPT.py --dist-url 'tcp://IP_OF_NODE0:FREE_PORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 0 [optional arguments]
+python SOME_SCRIPT.py --dist_url 'tcp://IP_OF_NODE0:FREE_PORT' --dist_backend 'nccl' --multiprocessing_distributed --world_size 2 --rank 0 [optional arguments]
 ```
 
 Node 1:
 ```bash
-python SOME_SCRIPT.py --dist-url 'tcp://IP_OF_NODE0:FREE_PORT' --dist-backend 'nccl' --multiprocessing-distributed --world-size 2 --rank 1 [optional arguments]
+python SOME_SCRIPT.py --dist_url 'tcp://IP_OF_NODE0:FREE_PORT' --dist_backend 'nccl' --multiprocessing_distributed --world_size 2 --rank 1 [optional arguments]
 ```
 
 ## Reference
