@@ -28,7 +28,7 @@ def main():
 
     parser.add_argument('--sequence_length', default=10, type=int, metavar='SEQUENCE_LENGTH',
                         help='The number of vector-label pairs (default: 10)')
-    parser.add_argument('--num_classes', default=30, type=int, metavar='NUM_CLASSES',
+    parser.add_argument('--num_classes', default=10, type=int, metavar='NUM_CLASSES',
                         help='The number of classes (default: 10)')
     parser.add_argument('--feature_size', default=10, type=int, metavar='FEATURE_SIZE',
                         help='Size of the input features (default: 10)')
