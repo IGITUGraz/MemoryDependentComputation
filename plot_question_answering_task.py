@@ -32,8 +32,8 @@ def main():
                         help='The example of the bAbI task (default: 4)')
     parser.add_argument('--ten_k', default=1, choices=[0, 1], type=int, metavar='TEN_K',
                         help='Use 10k examples (default: 1')
-    parser.add_argument('--add_time_words', default=1, choices=[0, 1], type=int, metavar='ADD_TIME_WORDS',
-                        help='Add time word to sentences (default: 1)')
+    parser.add_argument('--add_time_words', default=0, choices=[0, 1], type=int, metavar='ADD_TIME_WORDS',
+                        help='Add time word to sentences (default: 0)')
     parser.add_argument('--sentence_duration', default=100, type=int, metavar='N',
                         help='Number of time steps for each sentence (default: 100)')
     parser.add_argument('--max_num_sentences', default=50, type=int, metavar='N',
