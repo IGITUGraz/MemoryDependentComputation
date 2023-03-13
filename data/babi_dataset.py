@@ -123,7 +123,7 @@ class BABIDataset(torch.utils.data.Dataset):
         if self._check_exists():
             return
 
-        os.makedirs(self.folder)
+        os.makedirs(self.folder, exist_ok=True)
         print('Downloading {0}...'.format(self.url))
         filename = os.path.basename(self.url)
         filepath = os.path.join(self.folder, filename)
