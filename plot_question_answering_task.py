@@ -110,6 +110,7 @@ def main():
         learn_encoding=True,  # is only relevant during training (here, it can be either false or true)
         num_time_steps=args.sentence_duration,
         readout_delay=args.readout_delay,
+        learn_readout_delay=False,  # is only relevant during training (here, it can be either false or true)
         tau_trace=args.tau_trace,
         plasticity_rule=InvertedOjaWithSoftUpperBound(w_max=args.w_max,
                                                       gamma_pos=args.gamma_pos,
@@ -170,6 +171,29 @@ def main():
     mean_rate_write_val = np.sum(write_val, axis=1) / (1e-3 * story_length * args.sentence_duration)
     mean_rate_read_key = np.sum(read_key, axis=1) / (1e-3 * args.sentence_duration)
     mean_rate_read_val = np.sum(read_val, axis=1) / (1e-3 * args.sentence_duration)
+
+    z_s_enc = story_encoded[0]
+    z_r_enc = query_encoded[0]
+    z_key = np.concatenate((write_key[0], read_key[0]), axis=0)
+    z_value = np.concatenate((write_val[0], read_val[0]), axis=0)
+
+    print("z_s_enc", z_s_enc.shape)
+    print("z_r_enc", z_r_enc.shape)
+    print("z_key", z_key.shape)
+    print("z_value", z_value.shape)
+
+    all_neurons = np.concatenate((
+        np.pad(z_s_enc, ((0, args.sentence_duration), (0, 0))),
+        np.pad(z_r_enc, ((z_s_enc.shape[0], 0), (0, 0))),
+        z_key,
+        z_value
+    ), axis=1)
+
+    print("z_s_enc", (np.sum(z_s_enc, axis=0) / (1e-3 * (story_length + 1) * args.sentence_duration)).mean())
+    print("z_r_enc", (np.sum(z_r_enc, axis=0) / (1e-3 * (story_length + 1) * args.sentence_duration)).mean())
+    print("z_key", (np.sum(z_key, axis=0) / (1e-3 * (story_length + 1) * args.sentence_duration)).mean())
+    print("z_value", (np.sum(z_value, axis=0) / (1e-3 * (story_length + 1) * args.sentence_duration)).mean())
+    print("all_neurons", (np.sum(all_neurons, axis=0) / (1e-3 * (story_length + 1) * args.sentence_duration)).mean())
 
     # Make some plots
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex='all')

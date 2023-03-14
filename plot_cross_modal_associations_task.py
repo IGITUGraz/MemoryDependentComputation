@@ -202,6 +202,37 @@ def main():
     mean_rate_decoder_output_l1 = np.sum(decoder_output_l1, axis=1) / (1e-3 * args.num_time_steps)
     mean_rate_decoder_output_l2 = np.sum(decoder_output_l2, axis=1) / (1e-3 * args.num_time_steps)
 
+    z_s_enc = np.concatenate((mfcc_encoded[0], images_encoded[0]), axis=1)
+    z_r_enc = query_encoded[0]
+    z_key = np.concatenate((write_key[0], read_key[0]), axis=0)
+    z_value = np.concatenate((write_val[0], read_val[0]), axis=0)
+    z_dec1 = decoder_output_l1[0]
+    z_dec2 = decoder_output_l2[0]
+
+    print("z_s_enc", z_s_enc.shape)
+    print("z_r_enc", z_r_enc.shape)
+    print("z_key", z_key.shape)
+    print("z_value", z_value.shape)
+    print("z_dec1", z_dec1.shape)
+    print("z_dec2", z_dec2.shape)
+
+    all_neurons = np.concatenate((
+        np.pad(z_s_enc, ((0, args.num_time_steps), (0, 0))),
+        np.pad(z_r_enc, ((z_s_enc.shape[0], 0), (0, 0))),
+        z_key,
+        z_value,
+        np.pad(z_dec1, ((z_s_enc.shape[0], 0), (0, 0))),
+        np.pad(z_dec2, ((z_s_enc.shape[0], 0), (0, 0))),
+    ), axis=1)
+
+    print("z_s_enc", (np.sum(z_s_enc, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("z_r_enc", (np.sum(z_r_enc, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("z_key", (np.sum(z_key, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("z_value", (np.sum(z_value, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("z_dec1", (np.sum(z_dec1, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("z_dec2", (np.sum(z_dec2, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+    print("all_neurons", (np.sum(all_neurons, axis=0) / (1e-3 * (args.sequence_length + 1) * args.num_time_steps)).mean())
+
     # Make some plots
     fig, ax = plt.subplots(nrows=2, ncols=mfcc_sequence.size()[1] + 1, sharex='all')
     for i in range(mfcc_sequence.size()[1]):
