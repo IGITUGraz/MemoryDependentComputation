@@ -74,3 +74,50 @@ class WritingLayer(torch.nn.Module):
 
     def reset_parameters(self) -> None:
         torch.nn.init.xavier_uniform_(self.W, gain=math.sqrt(2))
+
+
+class WritingLayerReLU(torch.nn.Module):
+
+    def __init__(self, input_size: int, hidden_size: int, plasticity_rule: Callable) -> None:
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.plasticity_rule = plasticity_rule
+
+        self.W = torch.nn.Parameter(torch.Tensor(hidden_size + hidden_size, input_size))
+
+        self.reset_parameters()
+
+    def forward(self, x: torch.Tensor, states: Optional[torch.Tensor] = None) -> Tuple[
+            torch.Tensor, torch.Tensor, torch.Tensor]:
+        batch_size, sequence_length, _ = x.size()
+
+        if states is None:
+            mem = torch.zeros(batch_size, self.hidden_size, self.hidden_size, dtype=x.dtype, device=x.device)
+        else:
+            mem = states
+
+        i = torch.nn.functional.linear(x, self.W)
+        ik, iv = i.chunk(2, dim=2)
+
+        key_output_sequence = []
+        val_output_sequence = []
+        for t in range(sequence_length):
+
+            # Key-layer
+            key = torch.nn.functional.relu(ik.select(1, t))
+
+            # Value-layer
+            val = torch.nn.functional.relu(iv.select(1, t))
+
+            # Update memory
+            delta_mem = self.plasticity_rule(key, val, mem)
+            mem = mem + delta_mem
+
+            key_output_sequence.append(key)
+            val_output_sequence.append(val)
+
+        return mem, torch.stack(key_output_sequence, dim=1), torch.stack(val_output_sequence, dim=1)
+
+    def reset_parameters(self) -> None:
+        torch.nn.init.xavier_uniform_(self.W, gain=math.sqrt(2))

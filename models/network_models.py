@@ -9,8 +9,8 @@ import torch.nn.functional
 from layers.dense import DenseLayer
 from layers.embedding import EmbeddingLayer
 from layers.encoding import EncodingLayer
-from layers.reading import ReadingLayer
-from layers.writing import WritingLayer
+from layers.reading import ReadingLayer, ReadingLayerReLU
+from layers.writing import WritingLayer, WritingLayerReLU
 from models.neuron_models import NeuronModel
 from models.spiking_protonet import SpikingProtoNet
 from policies import policy
@@ -48,6 +48,45 @@ class MemorizingAssociations(torch.nn.Module):
 
         outputs = torch.sum(read_val[:, -30:, :], dim=1)
         outputs = self.output_layer(outputs)
+
+        encoding_outputs = [features_encoded, labels_encoded, query_encoded]
+        writing_outputs = [mem, write_key, write_val]
+        reading_outputs = [read_key, read_val]
+
+        return outputs, encoding_outputs, writing_outputs, reading_outputs
+
+    def reset_parameters(self) -> None:
+        torch.nn.init.xavier_uniform_(self.input_layer.weight.data, gain=math.sqrt(2))
+
+
+class MemorizingAssociationsReLU(torch.nn.Module):
+
+    def __init__(self, input_size: int, output_size: int, num_embeddings: int, embedding_size: int, memory_size: int,
+                 plasticity_rule: Callable) -> None:
+        super().__init__()
+
+        self.input_layer = torch.nn.Linear(input_size, embedding_size, bias=False)
+        self.embedding_layer = EmbeddingLayer(num_embeddings, embedding_size)
+        self.writing_layer = WritingLayerReLU(2*embedding_size, memory_size, plasticity_rule)
+        self.reading_layer = ReadingLayerReLU(embedding_size, memory_size)
+        self.output_layer = torch.nn.Linear(memory_size, output_size, bias=False)
+
+        self.reset_parameters()
+
+    def forward(self, features: torch.Tensor, labels: torch.Tensor, query: torch.Tensor) -> Tuple:
+        features_embedded = self.input_layer(features)
+        labels_embedded = self.embedding_layer(labels)
+        query_embedded = self.input_layer(query)
+
+        features_encoded = torch.nn.functional.relu(features_embedded)
+        labels_encoded = torch.nn.functional.relu(labels_embedded)
+        query_encoded = torch.nn.functional.relu(query_embedded.unsqueeze(1))
+
+        mem, write_key, write_val = self.writing_layer(torch.cat((features_encoded, labels_encoded), dim=-1))
+
+        read_key, read_val = self.reading_layer(query_encoded, mem)
+
+        outputs = self.output_layer(read_val.squeeze())
 
         encoding_outputs = [features_encoded, labels_encoded, query_encoded]
         writing_outputs = [mem, write_key, write_val]
