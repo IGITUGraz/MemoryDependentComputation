@@ -71,6 +71,8 @@ parser.add_argument('--tau_trace', default=20.0, type=float, metavar='N',
 parser.add_argument('--readout_delay', default=30, type=int, metavar='N',
                     help='Synaptic delay of the feedback-connections from value-neurons to key-neurons in the '
                          'reading layer (default: 30)')
+parser.add_argument('--learn_readout_delay', action='store_true',
+                    help='Lear the readout delay. If set to True, `readout_delay` is used as initial value.')
 
 parser.add_argument('--thr', default=0.1, type=float, metavar='N',
                     help='Spike threshold (default: 0.1)')
@@ -252,6 +254,7 @@ def main_worker(gpu, num_gpus_per_node, args):
         learn_encoding=args.learn_encoding,
         num_time_steps=args.sentence_duration,
         readout_delay=args.readout_delay,
+        learn_readout_delay=args.learn_readout_delay,
         tau_trace=args.tau_trace,
         plasticity_rule=InvertedOjaWithSoftUpperBound(w_max=args.w_max,
                                                       gamma_pos=args.gamma_pos,

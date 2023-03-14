@@ -11,7 +11,8 @@ from models.neuron_models import NeuronModel
 
 class ReadingLayer(torch.nn.Module):
 
-    def __init__(self, input_size: int, hidden_size: int, feedback_delay: int, dynamics: NeuronModel) -> None:
+    def __init__(self, input_size: int, hidden_size: int, feedback_delay: int,
+                 dynamics: NeuronModel, learn_feedback_delay: bool = False) -> None:
         super().__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size

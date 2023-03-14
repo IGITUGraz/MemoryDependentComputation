@@ -167,8 +167,8 @@ class CrossModalAssociations(torch.nn.Module):
 class QuestionAnswering(torch.nn.Module):
 
     def __init__(self, input_size: int, output_size: int, num_embeddings: int, embedding_size: int, memory_size: int,
-                 mask_time_words: bool, learn_encoding: bool, num_time_steps: int, readout_delay: int, tau_trace: float,
-                 plasticity_rule: Callable, dynamics: NeuronModel) -> None:
+                 mask_time_words: bool, learn_encoding: bool, num_time_steps: int, readout_delay: int,
+                 learn_readout_delay: bool, tau_trace: float, plasticity_rule: Callable, dynamics: NeuronModel) -> None:
         super().__init__()
         self.readout_delay = readout_delay
 
@@ -176,7 +176,8 @@ class QuestionAnswering(torch.nn.Module):
         self.encoding_layer = EncodingLayer(input_size, embedding_size, mask_time_words, learn_encoding,
                                             num_time_steps, dynamics)
         self.writing_layer = WritingLayer(embedding_size, memory_size, plasticity_rule, tau_trace, dynamics)
-        self.reading_layer = ReadingLayer(embedding_size, memory_size, readout_delay, dynamics)
+        self.reading_layer = ReadingLayer(embedding_size, memory_size, readout_delay, dynamics,
+                                          learn_feedback_delay=learn_readout_delay)
         self.output_layer = torch.nn.Linear(memory_size, output_size, bias=False)
 
     def forward(self, story: torch.Tensor, query: torch.Tensor) -> Tuple:
