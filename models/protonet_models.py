@@ -18,6 +18,22 @@ def spiking_conv_block(in_channels: int, out_channels: int, use_bias: bool) -> t
     )
 
 
+def conv_block(in_channels: int, out_channels: int, use_batch_norm: bool = True) -> torch.nn.Module:
+    if use_batch_norm:
+        return torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
+            torch.nn.BatchNorm2d(out_channels),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2)
+        )
+    else:
+        return torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2)
+        )
+
+
 class SpikingProtoNet(torch.nn.Module):
 
     def __init__(self, dynamics: NeuronModel, weight_dict: dict = None, num_time_steps: int = 100,
@@ -84,3 +100,24 @@ class SpikingProtoNet(torch.nn.Module):
                     self.layer_v_th[i] = v_th if self.layer_v_th[i] < v_th else self.layer_v_th[i]
                     self.encoder[i][0].dynamics.thr = self.layer_v_th[i]
                     self.encoder[i][0].dynamics.refractory_time_steps = self.if_refractory
+
+
+class ProtoNet(torch.nn.Module):
+
+    def __init__(self, input_size: int = 1, hidden_size: int = 64, output_size: int = 64,
+                 use_batch_norm: bool = True) -> None:
+        super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+
+        self.encoder = torch.nn.Sequential(
+            conv_block(input_size, hidden_size, use_batch_norm),
+            conv_block(hidden_size, hidden_size, use_batch_norm),
+            conv_block(hidden_size, hidden_size, use_batch_norm),
+            conv_block(hidden_size, output_size, use_batch_norm),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.encoder(x)
+        return x.view(x.size(0), -1)

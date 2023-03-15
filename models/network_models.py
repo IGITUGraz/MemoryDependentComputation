@@ -12,7 +12,7 @@ from layers.encoding import EncodingLayer
 from layers.reading import ReadingLayer, ReadingLayerReLU
 from layers.writing import WritingLayer, WritingLayerReLU
 from models.neuron_models import NeuronModel
-from models.spiking_protonet import SpikingProtoNet
+from models.protonet_models import SpikingProtoNet, ProtoNet
 from policies import policy
 
 
@@ -137,6 +137,47 @@ class OmniglotOneShot(torch.nn.Module):
 
         outputs = torch.sum(read_val[:, -30:, :], dim=1)
         outputs = self.output_layer(outputs)
+
+        encoding_outputs = [images_encoded, labels_encoded, query_encoded]
+        writing_outputs = [mem, write_key, write_val]
+        reading_outputs = [read_key, read_val]
+
+        return outputs, encoding_outputs, writing_outputs, reading_outputs
+
+
+class OmniglotOneShotReLU(torch.nn.Module):
+
+    def __init__(self, num_embeddings: int, output_size: int, memory_size: int, image_embedding_layer: ProtoNet,
+                 plasticity_rule: Callable) -> None:
+        super().__init__()
+
+        self.images_embedding_layer = image_embedding_layer
+        self.labels_embedding_layer = EmbeddingLayer(num_embeddings, image_embedding_layer.output_size)
+        self.writing_layer = WritingLayerReLU(2 * image_embedding_layer.output_size, memory_size, plasticity_rule)
+        self.reading_layer = ReadingLayerReLU(image_embedding_layer.output_size, memory_size)
+        self.output_layer = torch.nn.Linear(memory_size, output_size, bias=False)
+
+    def forward(self, images: torch.Tensor, labels: torch.Tensor, query: torch.Tensor) -> Tuple:
+        batch_size, sequence_length, *CHW = images.size()
+
+        images_embedded_sequence = []
+        for t in range(sequence_length):
+            images_embedded = self.images_embedding_layer(images.select(1, t))
+            images_embedded_sequence.append(images_embedded)
+
+        images_embedded = torch.stack(images_embedded_sequence, dim=1)
+        labels_embedded = self.labels_embedding_layer(labels)
+        query_embedded = self.images_embedding_layer(query)
+
+        images_encoded = torch.nn.functional.relu(images_embedded)
+        labels_encoded = torch.nn.functional.relu(labels_embedded)
+        query_encoded = torch.nn.functional.relu(query_embedded.unsqueeze(1))
+
+        mem, write_key, write_val = self.writing_layer(torch.cat((images_encoded, labels_encoded), dim=-1))
+
+        read_key, read_val = self.reading_layer(query_encoded, mem)
+
+        outputs = self.output_layer(read_val.squeeze())
 
         encoding_outputs = [images_encoded, labels_encoded, query_encoded]
         writing_outputs = [mem, write_key, write_val]

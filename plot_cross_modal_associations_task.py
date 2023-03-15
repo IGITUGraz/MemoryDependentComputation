@@ -18,7 +18,7 @@ from functions.autograd_functions import SpikeFunction
 from functions.plasticity_functions import InvertedOjaWithSoftUpperBound
 from models.network_models import CrossModalAssociations
 from models.neuron_models import IafPscDelta
-from models.spiking_protonet import SpikingProtoNet
+from models.protonet_models import SpikingProtoNet
 
 
 def main():
