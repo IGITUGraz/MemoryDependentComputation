@@ -458,3 +458,89 @@ class ReinforcementLearning(policy.RNNBase):
 
         torch.nn.init.orthogonal_(self.critic_linear.weight, gain=math.sqrt(2))
         torch.nn.init.constant_(self.critic_linear.bias, val=0.0)
+
+
+class ReinforcementLearningBaseReLU(torch.nn.Module):
+
+    def __init__(self, input_size: int, embedding_size: int, memory_size: int, plasticity_rule: Callable) -> None:
+        super().__init__()
+        self.memory_size = memory_size
+
+        self.embedding_layer = torch.nn.Linear(input_size, embedding_size, bias=False)
+        self.writing_layer = WritingLayerReLU(embedding_size, memory_size, plasticity_rule)
+        self.reading_layer = ReadingLayerReLU(embedding_size, memory_size)
+
+    @property
+    def state_size(self) -> Tuple[Tuple[int, int]]:
+        return (self.memory_size, self.memory_size),
+
+    @property
+    def output_size(self) -> int:
+        return self.memory_size
+
+    def forward(self, facts: torch.Tensor, states: List[torch.Tensor]) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+        facts = facts.permute(1, 0, -1)
+        mem = states[0]
+
+        facts_embedded = self.embedding_layer(facts)
+
+        facts_encoded = torch.nn.functional.relu(facts_embedded)
+
+        mem, write_key, write_val = self.writing_layer(facts_encoded, mem)
+
+        read_key, read_val = self.reading_layer(facts_encoded, mem)
+
+        states = [mem]
+
+        return read_val.permute(1, 0, -1), states
+
+
+class ReinforcementLearningReLU(policy.RNNBase):
+
+    def __init__(self, input_size: int, embedding_size: int, memory_size: int, plasticity_rule: Callable) -> None:
+        super().__init__(
+            ReinforcementLearningBaseReLU(input_size=input_size,
+                                          embedding_size=embedding_size,
+                                          memory_size=memory_size,
+                                          plasticity_rule=plasticity_rule)
+        )
+
+        self.actor = torch.nn.Sequential(
+            torch.nn.Linear(memory_size, memory_size), torch.nn.Tanh(),
+            torch.nn.Linear(memory_size, memory_size), torch.nn.Tanh())
+
+        self.critic = torch.nn.Sequential(
+            torch.nn.Linear(input_size + memory_size, memory_size), torch.nn.Tanh(),
+            torch.nn.Linear(memory_size, memory_size), torch.nn.Tanh())
+
+        self.critic_linear = torch.nn.Linear(memory_size, 1)
+
+        self.reset_parameters()
+
+    @property
+    def is_recurrent(self) -> True:
+        return True
+
+    def forward(self, inputs: torch.Tensor, states: List[torch.Tensor], masks: torch.Tensor) -> Tuple[
+            torch.Tensor, torch.Tensor, List[torch.Tensor]]:
+
+        outputs, states = self._forward(inputs, states, masks)
+
+        actor_outputs = self.actor(outputs)
+        critic_outputs = self.critic(torch.cat([inputs, outputs], dim=-1))
+
+        return self.critic_linear(critic_outputs), actor_outputs, states
+
+    def reset_parameters(self) -> None:
+        for layer in self.actor:
+            if isinstance(layer, torch.nn.Linear):
+                torch.nn.init.orthogonal_(layer.weight, gain=math.sqrt(2))
+                torch.nn.init.constant_(layer.bias, val=0.0)
+
+        for layer in self.critic:
+            if isinstance(layer, torch.nn.Linear):
+                torch.nn.init.orthogonal_(layer.weight, gain=math.sqrt(2))
+                torch.nn.init.constant_(layer.bias, val=0.0)
+
+        torch.nn.init.orthogonal_(self.critic_linear.weight, gain=math.sqrt(2))
+        torch.nn.init.constant_(self.critic_linear.bias, val=0.0)
