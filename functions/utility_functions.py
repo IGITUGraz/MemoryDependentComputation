@@ -10,6 +10,19 @@ def exp_convolve(x: torch.Tensor, trace: torch.Tensor, decay: float) -> torch.Te
     return (1.0 - decay) * x + decay * trace
 
 
+def euclidean_distance(x: torch.Tensor, y: torch.Tensor):
+    n = x.size()[0]
+    m = y.size()[0]
+    d = x.size()[1]
+    if d != y.size()[1]:
+        raise Exception
+
+    x = x.unsqueeze(1).expand(n, m, d)
+    y = y.unsqueeze(0).expand(n, m, d)
+
+    return torch.pow(x - y, 2).sum(2)
+
+
 class TrimSilence(object):
     """Removes the silence at the beginning and end of the passed audio data.
 

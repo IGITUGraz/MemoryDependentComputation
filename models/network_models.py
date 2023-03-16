@@ -244,6 +244,55 @@ class CrossModalAssociations(torch.nn.Module):
         return outputs, encoding_outputs, writing_outputs, reading_outputs, decoder_outputs
 
 
+class CrossModalAssociationsReLU(torch.nn.Module):
+
+    def __init__(self, output_size: int, memory_size: int, image_embedding_layer: torch.nn.Module,
+                 mfcc_embedding_layer: torch.nn.Module, plasticity_rule: Callable) -> None:
+        super().__init__()
+        mfcc_feature_size = mfcc_embedding_layer.output_size
+        image_feature_size = image_embedding_layer.output_size
+
+        self.mfcc_embedding_layer = mfcc_embedding_layer
+        self.image_embedding_layer = image_embedding_layer
+        self.writing_layer = WritingLayerReLU(mfcc_feature_size + image_feature_size, memory_size, plasticity_rule)
+        self.reading_layer = ReadingLayerReLU(mfcc_feature_size, memory_size)
+
+        self.decoder = torch.nn.Sequential(torch.nn.Linear(memory_size, 256),
+                                           torch.nn.ReLU(),
+                                           torch.nn.Linear(256, output_size),
+                                           torch.nn.Sigmoid())
+
+    def forward(self, mfcc: torch.Tensor, images: torch.Tensor, query: torch.Tensor) -> Tuple:
+        batch_size, sequence_length, *CHW = mfcc.size()
+
+        mfcc_embedded_sequence, images_embedded_sequence = [], []
+        for t in range(sequence_length):
+            mfcc_embedded = self.mfcc_embedding_layer(mfcc.select(1, t))
+            images_embedded = self.image_embedding_layer(images.select(1, t))
+            mfcc_embedded_sequence.append(mfcc_embedded)
+            images_embedded_sequence.append(images_embedded)
+
+        mfcc_embedded = torch.stack(mfcc_embedded_sequence, dim=1)
+        images_embedded = torch.stack(images_embedded_sequence, dim=1)
+        query_embedded = self.mfcc_embedding_layer(query)
+
+        mfcc_encoded = torch.nn.functional.relu(mfcc_embedded)
+        images_encoded = torch.nn.functional.relu(images_embedded)
+        query_encoded = torch.nn.functional.relu(query_embedded.unsqueeze(1))
+
+        mem, write_key, write_val = self.writing_layer(torch.cat((mfcc_encoded, images_encoded), dim=-1))
+
+        read_key, read_val = self.reading_layer(query_encoded, mem)
+
+        outputs = self.decoder(read_val.squeeze())
+
+        encoding_outputs = [mfcc_encoded, images_encoded, query_encoded]
+        writing_outputs = [mem, write_key, write_val]
+        reading_outputs = [read_key, read_val]
+
+        return outputs, encoding_outputs, writing_outputs, reading_outputs
+
+
 class QuestionAnswering(torch.nn.Module):
 
     def __init__(self, input_size: int, output_size: int, num_embeddings: int, embedding_size: int, memory_size: int,
