@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 import torch.backends.cudnn as cudnn
 import torch.utils.data
@@ -249,6 +250,31 @@ def main():
 
     fig, ax = plt.subplots(nrows=1, ncols=1, sharex='all')
     ax.pcolormesh(outputs[0, None].T, cmap='binary')
+    plt.tight_layout()
+
+    test_sampler = EpisodicBatchSampler(test_set.y, num_classes=args.num_classes, batch_size=1, iterations=1,
+                                        seed=args.sampler_seed)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_sampler=test_sampler)
+
+    mems = []
+    for i in range(100):
+        x, y = next(iter(test_loader))
+        x = x.view(1, -1, *x.size()[1:])
+
+        facts = x[:, :args.num_classes]
+        query = x[:, -1]
+
+        labels = torch.arange(0, args.num_classes)
+        labels = labels.expand(1, args.num_classes).long()
+
+        _, _, writing_outputs, _ = model(facts, labels, query)
+        mem = writing_outputs[0].squeeze(0).detach().numpy()
+        mems.append(mem.flatten())
+
+    mem_values = np.concatenate(mems)
+
+    plt.figure()
+    sns.histplot(mem_values, kde=True, bins='auto', log_scale=[False, True])
     plt.tight_layout()
 
     plt.show()
