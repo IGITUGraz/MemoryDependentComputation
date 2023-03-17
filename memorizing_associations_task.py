@@ -6,7 +6,7 @@ import socket
 import sys
 import time
 import warnings
-from collections import OrderedDict
+# from collections import OrderedDict
 from datetime import datetime
 
 import torch
@@ -97,6 +97,9 @@ parser.add_argument('--start_epoch', default=0, type=int, metavar='N',
                     help='Manual epoch number (useful on restarts, default: 0)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='Path to latest checkpoint (default: none)')
+parser.add_argument('--check_params', default=1, type=int, choices=[0, 1], metavar='CHECK_PARAMS',
+                    help='When loading from a checkpoint check if the model was trained with the same parameters '
+                         'as requested now (default: 1)')
 parser.add_argument('--evaluate', action='store_true',
                     help='Evaluate the model on the test set')
 
@@ -279,23 +282,25 @@ def main_worker(gpu, num_gpus_per_node, args):
                 ignore_keys.append('batch_size')
                 ignore_keys.append('sequence_length')
 
-            for key, val in vars(checkpoint['params']).items():
-                if key not in ignore_keys:
-                    if vars(args)[key] != val:
-                        print("=> You tried to restart training of a model that was trained with different parameters "
-                              "as you requested now. Aborting...")
-                        sys.exit()
+            if args.check_params:
+                for key, val in vars(checkpoint['params']).items():
+                    if key not in ignore_keys:
+                        if vars(args)[key] != val:
+                            print("=> You tried to restart training of a model that was trained with different "
+                                  "parameters as you requested now. Aborting...")
+                            sys.exit()
 
             if args.gpu is not None:
                 # best_acc may be from a checkpoint from a different GPU
                 best_acc = best_acc.to(args.gpu)
 
-            new_state_dict = OrderedDict()
-            for k, v in checkpoint['state_dict'].items():
-                if k.startswith('module.'):
-                    k = k[len('module.'):]  # remove `module.`
-                new_state_dict[k] = v
-            model.load_state_dict(new_state_dict)
+            # new_state_dict = OrderedDict()
+            # for k, v in checkpoint['state_dict'].items():
+            #     if k.startswith('module.'):
+            #         k = k[len('module.'):]  # remove `module.`
+            #     new_state_dict[k] = v
+            # model.load_state_dict(new_state_dict)
+            model.load_state_dict(checkpoint['state_dict'])
 
             optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{}' (epoch {})".format(args.resume, checkpoint['epoch']))
