@@ -7,13 +7,24 @@ import torch.nn.functional
 from torch.nn import Parameter
 
 from layers.convolution import *
+from layers.dense import DenseLayer
 from layers.encoding import EncodingLayer
 from models.neuron_models import NeuronModel
 
 
 def spiking_conv_block(in_channels: int, out_channels: int, use_bias: bool) -> torch.nn.Module:
     return torch.nn.Sequential(
-        Conv2DLayer(in_channels, out_channels, 3, padding=1, use_bias=use_bias),
+        Conv2DLayer(in_channels,
+                    out_channels,
+                    k_size=3,
+                    padding=1,
+                    stride=1,
+                    use_bias=use_bias,
+                    dynamics=NonLeakyIafPscDelta(thr=0.,
+                                                 perfect_reset=False,
+                                                 refractory_time_steps=0,
+                                                 spike_function=SpikeFunction,
+                                                 dampening_factor=1.)),
         MaxPool2DLayer(k_size=2, stride=2, padding=0)
     )
 
@@ -93,13 +104,13 @@ class SpikingProtoNet(torch.nn.Module):
                 for i in range(len(self.encoder)):
                     self.encoder[i][0].register_forward_hook(get_activation('conv' + str(i)))
 
-                aux_x = self.aux_encoding(torch.flatten(aux_train_image, -2, -1).unsqueeze(2))
+                aux_x, _ = self.aux_encoding(torch.flatten(aux_train_image, -2, -1).unsqueeze(2))
                 for i in range(len(self.encoder)):
                     _ = self.forward(aux_x)
                     v_th = max_activation['conv' + str(i)]
                     self.layer_v_th[i] = v_th if self.layer_v_th[i] < v_th else self.layer_v_th[i]
                     self.encoder[i][0].dynamics.thr = self.layer_v_th[i]
-                    self.encoder[i][0].dynamics.refractory_time_steps = self.if_refractory
+                    self.encoder[i][0].dynamics.refractory_time_steps = self.refractory_time_steps
 
 
 class ProtoNet(torch.nn.Module):

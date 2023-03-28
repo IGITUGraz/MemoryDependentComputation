@@ -26,7 +26,7 @@ class DenseLayer(torch.nn.Module):
 
     def forward(self, x: torch.Tensor, states: Optional[List[Union[Tuple[torch.Tensor, ...], torch.Tensor]]] = None) \
             -> Tuple[torch.Tensor, torch.Tensor, List[Union[Tuple[torch.Tensor, ...], torch.Tensor]]]:
-        batch_size, sequence_length, _ = x.size()
+        batch_size, sequence_length, *dims = x.size()
 
         if states is None:
             states = self.dynamics.initial_states(batch_size, self.hidden_size, x.dtype, x.device)

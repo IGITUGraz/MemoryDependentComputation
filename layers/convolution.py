@@ -7,23 +7,21 @@ import torch
 import torch.nn.functional
 
 from functions.autograd_functions import SpikeFunction
-from models.neuron_models import NonLeakyIafPscDelta
+from models.neuron_models import NeuronModel, NonLeakyIafPscDelta
 
 
 class Conv2DLayer(torch.nn.Module):
 
-    def __init__(self, fan_in: int, fan_out: int, k_size: int, padding: int, use_bias: bool = False) -> None:
+    def __init__(self, fan_in: int, fan_out: int, k_size: int, padding: int, stride: int,
+                 dynamics: NeuronModel, use_bias: bool = False) -> None:
         super().__init__()
         self.fan_in = fan_in
         self.fan_out = fan_out
         self.k_size = k_size
         self.padding = padding
-        self.conv2d = torch.nn.Conv2d(fan_in, fan_out, (k_size, k_size), padding=(padding, padding), bias=use_bias)
-        self.dynamics = NonLeakyIafPscDelta(thr=0.,
-                                            perfect_reset=False,
-                                            refractory_time_steps=0,
-                                            spike_function=SpikeFunction,
-                                            dampening_factor=1.)
+        self.conv2d = torch.nn.Conv2d(fan_in, fan_out, (k_size, k_size), stride=(stride, stride),
+                                      padding=(padding, padding), bias=use_bias)
+        self.dynamics = dynamics
         self.reset_parameters()
 
     def forward(self, x: torch.Tensor, states: Optional[Tuple[torch.Tensor, ...]] = None) -> Tuple[torch.Tensor, ...]:
